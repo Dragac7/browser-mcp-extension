@@ -1,0 +1,19 @@
+# Binary
+browser-cmd
+
+# Runtime outputs
+observations/
+extension/scripts/
+extension/config.json
+
+# Environment
+.env
+
+# Go
+*.exe
+*.test
+*.out
+
+# OS
+.DS_Store
+browser-mcp-extension

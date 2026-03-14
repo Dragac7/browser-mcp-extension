@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>E2E Basic Page</title>
+</head>
+<body>
+    <h1>Basic Test Page</h1>
+    <p id="content">Hello World</p>
+    <a id="link-target" href="basic_target.html">Go to target</a>
+    <button id="btn-change" onclick="document.getElementById('content').textContent = 'Changed'">Change Text</button>
+    <button id="btn-add" onclick="addElement()">Add Element</button>
+    <button id="btn-dblclick" ondblclick="document.getElementById('content').textContent = 'Double Clicked'">Double Click Me</button>
+    <button id="btn-disabled" disabled>Disabled Button</button>
+    <div id="dynamic"></div>
+    <script>
+        function addElement() {
+            var btn = document.createElement('button');
+            btn.textContent = 'New Button';
+            document.getElementById('dynamic').appendChild(btn);
+        }
+    </script>
+</body>
+</html>

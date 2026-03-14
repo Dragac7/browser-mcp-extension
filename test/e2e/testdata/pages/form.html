@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>E2E Form Page</title>
+</head>
+<body>
+    <form id="test-form" onsubmit="event.preventDefault(); document.getElementById('form-status').textContent = 'Submitted'" onkeydown="if(event.key==='Enter'){event.preventDefault(); this.dispatchEvent(new Event('submit'))}">
+        <input id="name-input" type="text" name="name" placeholder="Name">
+        <input id="email-input" type="email" name="email" placeholder="Email">
+        <textarea id="message-input" name="message" placeholder="Message"></textarea>
+        <select id="color-select" name="color">
+            <option value="">--Select--</option>
+            <option value="red">Red</option>
+            <option value="green">Green</option>
+            <option value="blue">Blue</option>
+        </select>
+        <select id="multi-select" name="multi" multiple>
+            <option value="a">Option A</option>
+            <option value="b">Option B</option>
+            <option value="c">Option C</option>
+        </select>
+        <input id="submit-btn" type="submit" value="Submit">
+    </form>
+    <p id="form-status">Not submitted</p>
+</body>
+</html>

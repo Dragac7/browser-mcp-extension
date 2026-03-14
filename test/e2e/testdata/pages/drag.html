@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>E2E Drag Page</title>
+</head>
+<body>
+    <div id="drag-source" role="button" draggable="true" style="width:100px;height:100px;background:blue;color:white;padding:10px">Drag me</div>
+    <div id="drop-target" role="button" style="width:200px;height:200px;background:#ddd;padding:10px" ondragover="event.preventDefault()" ondrop="event.preventDefault(); this.textContent='Dropped!'; this.style.background='#90EE90'">Drop here</div>
+    <script>
+        document.getElementById('drag-source').addEventListener('dragstart', function(e) {
+            e.dataTransfer.setData('text/plain', 'dragged');
+        });
+    </script>
+</body>
+</html>

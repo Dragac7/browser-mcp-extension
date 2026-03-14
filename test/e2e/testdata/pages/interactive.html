@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>E2E Interactive Page</title>
+</head>
+<body>
+    <div id="hover-target" role="button" onmouseover="document.getElementById('hover-result').style.display='block'" style="padding:20px;background:#eee">Hover over me</div>
+    <div id="hover-result" style="display:none">Hover detected!</div>
+    <div id="scroll-container" style="height:3000px">
+        <p id="top-marker">Top of page</p>
+        <button id="bottom-marker" style="position:absolute;top:2800px">Bottom of page</button>
+    </div>
+    <div id="delayed-container"></div>
+    <div id="disappearing-text">This will disappear</div>
+    <div id="modal-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:999">
+        <div style="background:white;margin:100px auto;padding:20px;width:300px">
+            <p>Modal content</p>
+            <button id="modal-close" onclick="document.getElementById('modal-overlay').style.display='none'">Close</button>
+        </div>
+    </div>
+    <button id="modal-open" onclick="document.getElementById('modal-overlay').style.display='block'">Open Modal</button>
+    <input id="key-target" type="text" placeholder="Type here" onkeydown="document.getElementById('key-result').textContent = event.key">
+    <p id="key-result"></p>
+    <div id="tab-target-1" role="button" tabindex="0" onfocus="this.textContent='Focused 1'">Tab target 1</div>
+    <div id="tab-target-2" role="button" tabindex="0" onfocus="this.textContent='Focused 2'">Tab target 2</div>
+    <script>
+        setTimeout(function() {
+            var msg = 'Delayed text ' + 'appeared';
+            document.getElementById('delayed-container').textContent = msg;
+        }, 8000);
+        setTimeout(function() {
+            document.getElementById('disappearing-text').textContent = '';
+        }, 8000);
+    </script>
+</body>
+</html>
