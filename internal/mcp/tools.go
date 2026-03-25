@@ -2,13 +2,17 @@ package mcpserver
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/paoloandrisani/browser-mcp-extension/internal/api"
 	"net/url"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/paoloandrisani/browser-mcp-extension/internal/api"
 )
 
 func registerTools(s *server.MCPServer, h *api.Handler) {
@@ -79,6 +83,12 @@ func registerTools(s *server.MCPServer, h *api.Handler) {
 		mcp.WithDescription("Fill multiple form fields in a single call. Each field specifies an element index and text."),
 		mcp.WithArray("fields", mcp.Required(), mcp.Description("Array of {elementIndex: number, text: string, clear?: boolean}")),
 	), handleFillForm(h))
+
+	s.AddTool(mcp.NewTool("browser_upload",
+		mcp.WithDescription("Upload file(s) to a <input type=\"file\"> element by its index from the last browser_snapshot. Files are provided as base64-encoded content or as local file paths that the server reads directly."),
+		mcp.WithNumber("elementIndex", mcp.Required(), mcp.Description("Element index of the file input from the last browser_snapshot")),
+		mcp.WithArray("files", mcp.Required(), mcp.Description("Array of {name: string, content: string (base64), mimeType?: string} or {name?: string, filePath: string (absolute), mimeType?: string}")),
+	), handleUpload(h))
 
 	s.AddTool(mcp.NewTool("browser_wait_for",
 		mcp.WithDescription("Wait for a fixed duration, for text to appear on the page, or for text to disappear."),
@@ -342,6 +352,95 @@ func handleFillForm(h *api.Handler) func(ctx context.Context, req mcp.CallToolRe
 			return mcp.NewToolResultError(fmt.Sprintf("fill_form failed: %v", err)), nil
 		}
 		return toolResult(map[string]interface{}{"success": ok2, "data": data, "error": errMsg, "snapshot": snap}), nil
+	}
+}
+
+func handleUpload(h *api.Handler) func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		args := req.GetArguments()
+		idxF, ok := args["elementIndex"].(float64)
+		if !ok {
+			return mcp.NewToolResultError("elementIndex is required"), nil
+		}
+		files, ok := args["files"].([]interface{})
+		if !ok || len(files) == 0 {
+			return mcp.NewToolResultError("files must be a non-empty array"), nil
+		}
+
+		for i, raw := range files {
+			entry, ok := raw.(map[string]interface{})
+			if !ok {
+				return mcp.NewToolResultError(fmt.Sprintf("files[%d] must be an object", i)), nil
+			}
+			_, hasContent := entry["content"].(string)
+			fp, hasFilePath := entry["filePath"].(string)
+
+			if hasContent && hasFilePath {
+				return mcp.NewToolResultError(fmt.Sprintf("files[%d]: provide either content or filePath, not both", i)), nil
+			}
+			if !hasContent && !hasFilePath {
+				return mcp.NewToolResultError(fmt.Sprintf("files[%d]: content or filePath is required", i)), nil
+			}
+
+			if hasFilePath {
+				if !filepath.IsAbs(fp) {
+					return mcp.NewToolResultError(fmt.Sprintf("files[%d]: filePath must be absolute, got %q", i, fp)), nil
+				}
+				// Check size via Stat before reading to avoid unbounded memory allocation.
+				// Symlinks are followed intentionally — the MCP server runs locally
+				// with user privileges, so any file the user can read is fair game.
+				info, err := os.Stat(fp)
+				if err != nil {
+					return mcp.NewToolResultError(fmt.Sprintf("files[%d]: cannot read file: %v", i, err)), nil
+				}
+				const maxFileSize = 10 * 1024 * 1024
+				if info.Size() > maxFileSize {
+					return mcp.NewToolResultError(fmt.Sprintf("files[%d]: file exceeds 10 MB limit (%d bytes)", i, info.Size())), nil
+				}
+				data, err := os.ReadFile(fp)
+				if err != nil {
+					return mcp.NewToolResultError(fmt.Sprintf("files[%d]: cannot read file: %v", i, err)), nil
+				}
+				entry["content"] = base64.StdEncoding.EncodeToString(data)
+				delete(entry, "filePath")
+
+				if _, hasName := entry["name"].(string); !hasName {
+					entry["name"] = filepath.Base(fp)
+				}
+
+				if _, hasMime := entry["mimeType"].(string); !hasMime {
+					entry["mimeType"] = mimeFromExt(filepath.Ext(fp))
+				}
+			}
+		}
+
+		ok2, data, errMsg, snap, err := h.ExecuteScriptAndObserve("upload.js", map[string]interface{}{
+			"elementIndex": int(idxF),
+			"files":        files,
+		})
+		if err != nil {
+			return mcp.NewToolResultError(fmt.Sprintf("upload failed: %v", err)), nil
+		}
+		return toolResult(map[string]interface{}{"success": ok2, "data": data, "error": errMsg, "snapshot": snap}), nil
+	}
+}
+
+func mimeFromExt(ext string) string {
+	switch strings.ToLower(ext) {
+	case ".pdf":
+		return "application/pdf"
+	case ".txt":
+		return "text/plain"
+	case ".doc":
+		return "application/msword"
+	case ".docx":
+		return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+	case ".png":
+		return "image/png"
+	case ".jpg", ".jpeg":
+		return "image/jpeg"
+	default:
+		return "application/octet-stream"
 	}
 }
 

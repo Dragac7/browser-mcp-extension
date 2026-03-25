@@ -27,15 +27,15 @@ func buildTestHandler(t *testing.T) *api.Handler {
 	return api.NewHandler(store, execute, executeFile, screenshot, tabs, scriptsDir, "")
 }
 
-func TestNewServerRegisters18Tools(t *testing.T) {
+func TestNewServerRegisters19Tools(t *testing.T) {
 	h := buildTestHandler(t)
 	s := mcpserver.NewServer(h)
 	if s == nil {
 		t.Fatal("expected non-nil server")
 	}
 	tools := s.ListTools()
-	if len(tools) != 18 {
-		t.Errorf("expected 18 tools, got %d", len(tools))
+	if len(tools) != 19 {
+		t.Errorf("expected 19 tools, got %d", len(tools))
 		for name := range tools {
 			t.Logf("  - %s", name)
 		}

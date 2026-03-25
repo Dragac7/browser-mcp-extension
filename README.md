@@ -7,20 +7,19 @@ The system has three components:
 - **Go Binary:** Exposes an MCP server (stdio) for AI agents and an HTTP API for curl/scripting.
 - **JS Scripts:** Page-level automation scripts (click, type, navigate, observe, etc.).
 
+## Prerequisites
+
+- **Go 1.24+**
+- **Chrome or Chromium**
+
 ## Quick Start
 
 ```bash
-# Build
+# Build the binary
 make build
 
-# Wrap JS scripts into extension (required before first run)
+# Wrap JS scripts into the extension (required before first run)
 make sync-scripts
-
-# Start HTTP API + WebSocket server
-make serve
-
-# Or start MCP server on stdio (for AI agents)
-make mcp
 ```
 
 ### Load the Chrome Extension
@@ -28,7 +27,35 @@ make mcp
 1. Open `chrome://extensions/` in Chrome
 2. Enable "Developer mode"
 3. Click "Load unpacked" and select the `extension/` directory
-4. The extension connects to the Go binary via WebSocket on the configured port
+
+The extension connects to the Go binary via WebSocket on the configured port. **The extension must be loaded and connected before any MCP tool or HTTP endpoint will work.**
+
+### Run Modes
+
+```bash
+# MCP server on stdio (for AI agents)
+make mcp
+
+# HTTP API + WebSocket server (for curl/scripting)
+make serve
+```
+
+## Setup with Claude Code
+
+Create a `.mcp.json` file in the project where you want to use browser automation:
+
+```json
+{
+  "mcpServers": {
+    "browser-automation": {
+      "command": "/absolute/path/to/browser-mcp-extension/browser-cmd",
+      "args": ["--mcp"]
+    }
+  }
+}
+```
+
+Replace `/absolute/path/to/browser-mcp-extension/browser-cmd` with the actual path to the built binary. Then restart Claude Code to pick up the MCP server.
 
 ## Configuration
 
@@ -81,18 +108,12 @@ The HTTP API binds to `127.0.0.1` only. Endpoints:
 | GET | `/api/screenshot` | Take a screenshot |
 | GET | `/api/tabs` | List browser tabs |
 
-## E2E Tests
-
-E2E tests require Chromium (installed automatically by Playwright):
-
-```bash
-make e2e
-```
-
 ## Development
 
 ```bash
 make test    # Unit tests
 make vet     # Go vet
+make e2e     # E2E tests (runs headful Chromium via playwright-go)
 make clean   # Remove binary, observations, wrapped scripts
+make help    # Show all available commands
 ```

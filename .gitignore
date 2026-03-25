@@ -17,3 +17,8 @@ extension/config.json
 # OS
 .DS_Store
 browser-mcp-extension
+
+linkedin
+.mcp.json
+.claude/
+CLAUDE.md

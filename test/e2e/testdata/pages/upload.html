@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>E2E Upload Page</title>
+</head>
+<body>
+    <h1>File Upload Test</h1>
+
+    <!-- Single file input -->
+    <label for="single-file">Single file:</label>
+    <input type="file" id="single-file" aria-label="Single file">
+    <p id="single-status">No file selected</p>
+
+    <!-- Multiple file input -->
+    <label for="multi-file">Multiple files:</label>
+    <input type="file" id="multi-file" multiple aria-label="Multiple files">
+    <p id="multi-status">No files selected</p>
+
+    <!-- Accept-restricted input -->
+    <label for="restricted-file">PDF/TXT only:</label>
+    <input type="file" id="restricted-file" accept=".pdf,.txt" aria-label="PDF or TXT only">
+    <p id="restricted-status">No file selected</p>
+
+    <!-- Drag-and-drop zone -->
+    <div id="drop-zone" style="border:2px dashed #999;padding:40px;text-align:center;margin:20px 0;"
+         aria-label="Drop zone">
+        Drop files here
+    </div>
+    <p id="drop-status">No files dropped</p>
+
+    <script>
+        function showFiles(input, statusId) {
+            var el = document.getElementById(statusId);
+            var names = Array.from(input.files).map(function(f) { return f.name + '(' + f.size + 'b)'; });
+            el.textContent = names.length > 0 ? 'Selected: ' + names.join(', ') : 'No file selected';
+        }
+
+        document.getElementById('single-file').addEventListener('change', function() {
+            showFiles(this, 'single-status');
+        });
+        document.getElementById('multi-file').addEventListener('change', function() {
+            showFiles(this, 'multi-status');
+        });
+        document.getElementById('restricted-file').addEventListener('change', function() {
+            showFiles(this, 'restricted-status');
+        });
+
+        var dropZone = document.getElementById('drop-zone');
+        dropZone.addEventListener('dragover', function(e) { e.preventDefault(); });
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            var names = Array.from(e.dataTransfer.files).map(function(f) { return f.name; });
+            document.getElementById('drop-status').textContent = names.length > 0
+                ? 'Dropped: ' + names.join(', ')
+                : 'No files dropped';
+        });
+    </script>
+</body>
+</html>
